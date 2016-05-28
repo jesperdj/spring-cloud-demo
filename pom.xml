@@ -26,6 +26,7 @@
     <description>Spring Cloud Demo</description>
 
     <modules>
+        <module>config-service</module>
         <module>whiteboard-service</module>
     </modules>
 </project>

@@ -57,4 +57,48 @@ The embedded Tomcat that Spring Boot starts up by default listens on port 8080, 
 Note that there's a file `data.sql` in the `src/main/resources` directory which inserts some test data into the database - this will be picked up and executed automatically at startup by Spring Boot.
 We're using an embedded, in-memory database ([H2](http://h2database.com)) for this demo.
 
-Enter `./goto step2` in a git bash shell to go to step 2.
+## Step 2: Configuration Service
+
+When you have a system that consists of many microservices that run across many servers, you'll want to centralize configuration.
+It would be very cumbersome to manage the configuration of each microservice instance on each node where it is deployed.
+Spring Cloud has a configuration service that very nicely fits in with the configuration mechanism of Spring Boot and the Spring Framework in general.
+
+### Creating the configuration service
+
+What we will do in this step is create another microservice - the configuration service.
+The other services, such as the whiteboard service that we created, will get their configuration from the configuration service instead of from their own local `application.properties` file.
+
+We add a module `config-service` to the project, which is another very plain and simple Spring Boot application.
+This is the first module that will actually use components from Spring Cloud.
+In the `pom.xml` we have to import the Spring Cloud dependencies POM in the `dependencyManagement` section, and then we add a dependency to `org.springframework.cloud:spring-cloud-config-server`.
+
+To enable the configuration server, we add the `@EnableConfigServer` annotation to the application class.
+
+We'll also need to set a few properties in `application.properties`.
+
+First, we'll set the server port to 8888, because configuration clients will by default search for the configuration service on `localhost:8888`.
+
+The configuration service by default gets the configuration properties that it serves from files in a git repository.
+We have to set `spring.cloud.config.server.git.uri` to the URI of the git repository that will contain the configuration files.
+
+### Making the whiteboard service a client of the configuration service
+
+Now were are going to make some modifications to the whiteboard service so that it gets its configuration from the configuration service instead of from its own `application.properties` file.
+
+You'll see that this is very easy and that we don't need to modify the source code.
+The configuration server will act as just another source of configuration properties via Spring's property source mechanism.
+
+We add a dependency on `org.springframework.cloud:spring-cloud-starter-config` to the whiteboard service.
+Spring Boot's auto-configuration mechanism will then automatically configure the application so that it calls the configuration service to get configuration properties.
+
+We must rename the `application.properties` of the whiteboard service to `bootstrap.properties` and add a property `spring.application.name` there.
+The file `bootstrap.properties` is picked up early in the configuration process, and the application name is what the configuration service uses to find the configuration for this service.
+
+We set `spring.application.name` to `whiteboard-service`, and then we make sure that there is a file `whiteboard-service.properties` in the configuration file git repository.
+
+We set `server.port` in `whiteboard-service.properties` to 9090, so that we can see that if we start the config service and the whiteboard service, everything works.
+
+Now we start the configuration service and the whiteboard service.
+You'll see that the whiteboard service now gets its configuration from the config service and that it's running on port 9090 instead of the default port 8080.
+
+Enter `./goto step3` in a git bash shell to go to step 3.

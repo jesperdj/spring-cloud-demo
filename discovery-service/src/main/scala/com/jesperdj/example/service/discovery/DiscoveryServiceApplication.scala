@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jesperdj.example.service.whiteboard
+package com.jesperdj.example.service.discovery
 
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient
+import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer
 
 @SpringBootApplication
-@EnableDiscoveryClient
-class WhiteboardServiceApplication
+@EnableEurekaServer
+class DiscoveryServiceApplication
 
-object WhiteboardServiceApplication extends App {
-  SpringApplication.run(classOf[WhiteboardServiceApplication], args: _*)
+object DiscoveryServiceApplication extends App {
+  SpringApplication.run(classOf[DiscoveryServiceApplication], args: _*)
 }

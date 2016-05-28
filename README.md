@@ -101,4 +101,40 @@ We set `server.port` in `whiteboard-service.properties` to 9090, so that we can 
 Now we start the configuration service and the whiteboard service.
 You'll see that the whiteboard service now gets its configuration from the config service and that it's running on port 9090 instead of the default port 8080.
 
-Enter `./goto step3` in a git bash shell to go to step 3.
+## Step 3: Discovery Service
+
+If you have a system with lots of microservices distributed across many servers, you'll want to have a [service registry](http://microservices.io/patterns/service-registry.html) that keeps track of where all the services are in the system.
+If a service needs to collaborate with another service, it will look it up in the service registry so that it knows where to send its request to.
+
+Different implementations of service registries already exist.
+Spring Cloud currently has support for [Consul](https://www.consul.io/), [Zookeeper](http://zookeeper.apache.org/) and [Eureka](https://github.com/Netflix/eureka).
+
+In this demo we will use Eureka, which is one of the open source microservices components from Netflix.
+
+### Creating the discovery service
+
+The discovery service will be another microservice, and creating it is just as simple as creating th configuration service.
+
+We add a module `discovery-service` to the project, which is again a very simple Spring Boot application.
+
+To make this the discovery service, we add a dependency on `org.springframework.cloud:spring-cloud-starter-eureka-server` and then we enable the Eureka server by adding the `@EnableEurekaServer` annotation to the application class.
+
+The discovery service is, just like the whiteboard service, a client of the configuration service.
+So, just like with the whiteboard service, we set `spring.application.name` in `bootstrap.properties` and make sure that there is a corresponding configuration file in the config file git repository.
+
+There, we make the discovery service run on port 8761, again because clients by default look at `localhost:8761` for the discovery service.
+We also set a few other Eureka configuration parameters.
+
+Now we start the config service and the discovery service.
+When they are running, you can go to [http://localhost:8761](http://localhost:8761) where you'll see the status of the Eureka server.
+Currently there are no services registered.
+We need to make the whiteboard service a discovery client, so that it will register itself with Eureka when it starts.
+
+### Making the whiteboard service a client of the discovery service
+
+To make the whiteboard service register itself with Eureka, we add a dependency on `org.springframework.cloud:spring-cloud-starter-eureka` to the whiteboard service and we add the `@EnableDiscoveryClient` annotation to the application class.
+
+Now we start the whiteboard service.
+When it has started we can again go to [http://localhost:8761](http://localhost:8761) and we'll see that the whiteboard service is registered in Eureka.
+
+Enter `./goto step4` in a git bash shell to go to step 4.

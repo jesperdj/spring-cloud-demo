@@ -168,4 +168,20 @@ Your system will be more scalable and more resilient if you go for eventual cons
 Instead of directly doing a POST from the whiteboard client to the whiteboard service you could put the new note on a message queue.
 The whiteboard service can then pick up new notes from that queue and do writes asynchronously.
 
-Enter `./goto step5` in a git bash shell to go to step 5.
+## Step 5: Client-side load balancing with Ribbon
+
+In this step we are going to use Ribbon, another microservices component by Netflix.
+Ribbon is a library that for inter-process communication using REST calls with client-side load balancing.
+It also works together with other Netflix components such as Eureka and Hystrix (which we'll see later).
+
+To use Ribbon, we put a `@LoadBalanced` annotation on the `RestTemplate` bean factory method in the application class of the whiteboard client.
+This will make Spring Cloud wire up the `RestTemplate` so that it uses Ribbon.
+
+There are also some changes to the controller.
+Ribbon automatically uses Eureka to find the location of the actual service instance that we want to call, so we don't have to use the `DiscoveryClient` anymore to lookup the service instance.
+Instead, we replace the hostname in the URI with the name of the service, so in this case we are going to use the URI: http://whiteboard-service/notes
+
+Ribbon will lookup instances of the service using Eureka and use a load balancing algorithm to pick one of the instances to send the request to.
+(In this demo, there's only a single instance of the whiteboard service).
+
+Enter `./goto step6` in a git bash shell to go to step 6.

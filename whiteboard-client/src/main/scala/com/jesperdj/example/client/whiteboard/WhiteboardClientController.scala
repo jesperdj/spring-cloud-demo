@@ -15,10 +15,10 @@
  */
 package com.jesperdj.example.client.whiteboard
 
+import java.net.URI
+
 import com.jesperdj.example.client.whiteboard.domain.Note
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.cloud.client.ServiceInstance
-import org.springframework.cloud.client.discovery.DiscoveryClient
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.hateoas.Resources
 import org.springframework.http.HttpMethod
@@ -27,21 +27,13 @@ import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.{RequestBody, RequestMapping, RequestMethod, ResponseBody}
 import org.springframework.web.client.RestTemplate
 
-import scala.collection.JavaConversions._
-
 @Controller
-class WhiteboardClientController @Autowired()(discoveryClient: DiscoveryClient, restTemplate: RestTemplate) {
-
-  private def lookupWhiteboardService: ServiceInstance = {
-    // Lookup instances of the service; return the first one
-    val instances = discoveryClient.getInstances("whiteboard-service")
-    instances(0)
-  }
+class WhiteboardClientController @Autowired()(restTemplate: RestTemplate) {
 
   @RequestMapping(Array("/"))
   def index(model: Model): String = {
-    // Resolve URI collection of notes
-    val uri = lookupWhiteboardService.getUri.resolve("/notes")
+    // Use the service name as the hostname - Ribbon will lookup the actual hostname and port in Eureka
+    val uri = URI.create("http://whiteboard-service/notes")
 
     // Call the service using the RestTemplate
     val typeRef = new ParameterizedTypeReference[Resources[Note]] {}
@@ -57,8 +49,8 @@ class WhiteboardClientController @Autowired()(discoveryClient: DiscoveryClient, 
   @RequestMapping(method = Array(RequestMethod.POST), path = Array("/add"), consumes = Array("application/json"))
   @ResponseBody
   def add(@RequestBody note: Note): Note = {
-    // Resolve URI collection of notes
-    val uri = lookupWhiteboardService.getUri.resolve("/notes")
+    // Use the service name as the hostname - Ribbon will lookup the actual hostname and port in Eureka
+    val uri = URI.create("http://whiteboard-service/notes")
 
     // Do a POST to the whiteboard service to create the new note
     restTemplate.postForObject(uri, note, classOf[Note])

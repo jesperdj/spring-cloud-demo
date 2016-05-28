@@ -18,20 +18,19 @@ package com.jesperdj.example.client.whiteboard
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient
-import org.springframework.cloud.client.loadbalancer.LoadBalanced
+import org.springframework.cloud.netflix.feign.EnableFeignClients
 import org.springframework.context.annotation.Bean
 import org.springframework.format.FormatterRegistry
 import org.springframework.format.datetime.DateFormatter
-import org.springframework.web.client.RestTemplate
+import org.springframework.hateoas.config.EnableHypermediaSupport
+import org.springframework.hateoas.config.EnableHypermediaSupport.HypermediaType
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 
 @SpringBootApplication
 @EnableDiscoveryClient
+@EnableFeignClients
+@EnableHypermediaSupport(`type` = Array(HypermediaType.HAL))
 class WhiteboardClientApplication extends WebMvcConfigurerAdapter {
-
-  @Bean
-  @LoadBalanced
-  def restTemplate: RestTemplate = new RestTemplate()
 
   @Bean
   def dateFormatter: DateFormatter = new DateFormatter("dd-MM-yyyy HH:mm:ss")

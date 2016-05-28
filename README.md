@@ -184,4 +184,30 @@ Instead, we replace the hostname in the URI with the name of the service, so in 
 Ribbon will lookup instances of the service using Eureka and use a load balancing algorithm to pick one of the instances to send the request to.
 (In this demo, there's only a single instance of the whiteboard service).
 
-Enter `./goto step6` in a git bash shell to go to step 6.
+## Step 6: Declarative REST service with Feign
+
+In this step we are going to use another Netflix component: Feign.
+This is a library that makes writing clients for REST webservices very easy.
+
+The idea that Feign implements is the same as in Spring Data JPA.
+We write an interface (Java) or a trait (Scala) that declares the methods that are available on the REST webservice that we want to call and then Feign will automatically generate an implementation that calls the webservice.
+We don't have to deal with the low-level details of creating an HTTP request with JSON and parsing the HTTP response anymore, which makes it super-easy to create clients for REST webservices.
+
+First, we add a dependency to `org.springframework.cloud:spring-cloud-starter-feign` to the whiteboard client.
+
+Then we create a trait `WhiteboardClient` which contains two method declarations with a `@RequestMapping` annotation, which point to the methods of the whiteboard service.
+The `WhiteboardClient` trait has a `@FeignClient` annotation with the name of the service that we want to call.
+Feign uses Ribbon, which uses Eureka to lookup a service instance to call, so this name is the name under which the service is registered in Eureka.
+
+We also need to make some changes to the application class.
+
+We don't need the `RestTemplate` anymore, so we remove that.
+
+We add an `@EnableFeignClients` annotation so that Spring is going to look for the `@FeignClient` traits and generate implementations.
+
+To make it work correctly with our HATEOAS / HAL webservice, we need to explicitly enable Spring HATEOAS by adding an `@EnableHypermediaSupport` annotation (without this, the Feign client will not parse the response from the webservice correctly).
+
+The controller now becomes very simple.
+The `index` and `add` methods now only have to call the methods in the `WhiteboardClient`.
+
+Enter `./goto step7` in a git bash shell to go to step 7.

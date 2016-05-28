@@ -16,21 +16,16 @@
 package com.jesperdj.example.client.whiteboard
 
 import com.jesperdj.example.client.whiteboard.domain.Note
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Controller
-import org.springframework.ui.Model
-import org.springframework.web.bind.annotation.{RequestBody, RequestMapping, RequestMethod, ResponseBody}
+import org.springframework.cloud.netflix.feign.FeignClient
+import org.springframework.hateoas.Resources
+import org.springframework.web.bind.annotation.{RequestMapping, RequestMethod}
 
-@Controller
-class WhiteboardClientController @Autowired()(whiteboardClient: WhiteboardClient) {
+@FeignClient("whiteboard-service")
+trait WhiteboardClient {
 
-  @RequestMapping(Array("/"))
-  def index(model: Model): String = {
-    model.addAttribute("notes", whiteboardClient.getAllNotes)
-    "index"
-  }
+  @RequestMapping(method = Array(RequestMethod.GET), path = Array("/notes"))
+  def getAllNotes: Resources[Note]
 
-  @RequestMapping(method = Array(RequestMethod.POST), path = Array("/add"), consumes = Array("application/json"))
-  @ResponseBody
-  def add(@RequestBody note: Note): Note = whiteboardClient.addNote(note)
+  @RequestMapping(method = Array(RequestMethod.POST), path = Array("/notes"))
+  def addNote(note: Note): Note
 }

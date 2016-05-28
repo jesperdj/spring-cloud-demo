@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Whiteboard</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet"/>
+    <style>
+        body {
+            padding-top: 30px;
+            padding-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+<div class="container" role="main">
+    <div class="page-header">
+        <h1>Whiteboard</h1>
+    </div>
+    <div>
+        <div class="panel panel-default" th:each="note : ${notes}">
+            <div class="panel-heading">On <span th:text="${{note.createdDateTime}}"></span>, <strong th:text="${note.authorName}"></strong> wrote:</div>
+            <div class="panel-body" th:text="${note.content}"></div>
+        </div>
+    </div>
+    <div>
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addModal">Add</button>
+    </div>
+
+    <div id="addModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 id="addModalLabel" class="modal-title">Add a new note</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label for="inputAuthorName" class="col-sm-2 control-label">Name</label>
+                            <div class="col-sm-10"><input id="inputAuthorName" type="text" class="form-control" placeholder="Your name"/></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputContent" class="col-sm-2 control-label">Text</label>
+                            <div class="col-sm-10"><textarea id="inputContent" class="form-control" rows="3" placeholder="Enter text"></textarea></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addNote();">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script language="JavaScript">
+function addNote() {
+    var inputAuthorName = $('#inputAuthorName');
+    var inputContent = $('#inputContent');
+
+    var note = { createdDateTime: new Date(), authorName: inputAuthorName.val(), content: inputContent.val() };
+
+    $.ajax("/add", {
+        data: JSON.stringify(note),
+        contentType: 'application/json',
+        type: 'POST'
+    }).always(function() {
+        location.reload();
+    });
+}
+</script>
+</body>
+</html>

@@ -137,4 +137,35 @@ To make the whiteboard service register itself with Eureka, we add a dependency 
 Now we start the whiteboard service.
 When it has started we can again go to [http://localhost:8761](http://localhost:8761) and we'll see that the whiteboard service is registered in Eureka.
 
-Enter `./goto step4` in a git bash shell to go to step 4.
+## Step 4: Whiteboard Client
+
+In this step we will create a simple Spring Boot webapp which is going to lookup the whiteboard service using the discovery service.
+
+We add another Spring Boot application, `whiteboard-client`.
+This is a webapp that uses the Thymeleaf template engine.
+
+This webapp is a client of the discovery service, so it has a dependency on `org.springframework.cloud:spring-cloud-starter-eureka` and its application class is annotated with `@EnableDiscoveryClient`.
+
+We don't want the client to register in Eureka, so we set `eureka.client.registerWithEureka` to `false` in `application.properties`.
+(Note that the client is not a client of the configuration service, so we configure it the normal Spring Boot way, using `application.properties`).
+
+The controller, `WhiteboardClientController`, shows how we use the `DiscoveryClient` to lookup instances of the whiteboard service, which we can then call to get the list of notes or to add a new note.
+We use a Spring `RestTemplate` to make REST calls to the whiteboard service.
+
+Start the config service, the discovery service, the whiteboard service and the whiteboard client.
+We can now go to [http://localhost:8080](http://localhost:8080) and use the client to see the content of the whiteboard and to add new notes.
+
+Before we move on, there are a few things to remark.
+
+First of all, using annotations in Scala is a bit ugly in some ways.
+Constructor injection looks a bit weird, with the `@Autowired()` annotation with parentheses before the constructor argument list.
+Also, the `path` and other parameters of the `@RequestMapping` annotation are actually arrays, and in Scala we must explicitly pass an array - in Java, you can either pass an array or a single parameter.
+
+Second, we didn't think about transactions in this simple example.
+Note that there is no distributed transaction that encompasses everything that happens in a POST request to the `/add` endpoint.
+We could set things up to use distributed transactions, but that makes the system [complex and hard to scale](http://ivoroshilin.com/2014/03/18/distributed-transactions-and-scalability-issues-in-large-scale-distributed-systems/).
+Your system will be more scalable and more resilient if you go for eventual consistency instead.
+Instead of directly doing a POST from the whiteboard client to the whiteboard service you could put the new note on a message queue.
+The whiteboard service can then pick up new notes from that queue and do writes asynchronously.
+
+Enter `./goto step5` in a git bash shell to go to step 5.

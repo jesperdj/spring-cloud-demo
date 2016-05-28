@@ -29,5 +29,6 @@
         <module>config-service</module>
         <module>discovery-service</module>
         <module>whiteboard-service</module>
+        <module>whiteboard-client</module>
     </modules>
 </project>

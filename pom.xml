@@ -30,5 +30,6 @@
         <module>discovery-service</module>
         <module>whiteboard-service</module>
         <module>whiteboard-client</module>
+        <module>hystrix-dashboard</module>
     </modules>
 </project>

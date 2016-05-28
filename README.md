@@ -210,4 +210,67 @@ To make it work correctly with our HATEOAS / HAL webservice, we need to explicit
 The controller now becomes very simple.
 The `index` and `add` methods now only have to call the methods in the `WhiteboardClient`.
 
-Enter `./goto step7` in a git bash shell to go to step 7.
+## Step 7: Circuit breaker with Hystrix
+
+One of the design patterns that is often used in microservices systems to make the system more robust is the [circuit breaker pattern](http://martinfowler.com/bliki/CircuitBreaker.html).
+You use this pattern to avoid cascading failures.
+
+The basic idea is that you wrap calls to services in a circuit breaker object, which monitors failures.
+When the number of failures reaches a certain threshold, the circuit breaker opens and further calls to the service immediately return with an error (no remote call is made).
+After certain criteria have been met (for example, after a period of time, and when the service is up again) the circuit breaker closes again and things return to normal.
+
+The goal is to prevent cascading failures - when you have a chain of services, you want to catch failures at the beginning of the chain to prevent a storm of failures in the network.
+
+### Adding Hystrix to the whiteboard client
+
+In this step we will use Hystrix, another Netflix component, to use the circuit breaker pattern.
+
+First, we add a dependency to `org.springframework.cloud:spring-cloud-starter-hystrix` to the whiteboard client.
+
+Hystrix allows you to define a fallback method that should be called when a service call fails.
+We are going to configure this for our `WhiteboardClient`.
+We do this by specifying the `fallback` attribute on Spring Cloud's `@FeignClient` annotation that's on the `WhiteboardClient` trait.
+That attribute must point to a Spring bean that implements the Feign client trait, so we add a class `WhiteboardClientFallback` which extends trait `WhiteboardClient`.
+The implementation of the fallback is very simple for this demo; the `getAllNotes` method returns a collection with a single `Note` that says that the whiteboard is not available, and the `addNote` method does nothing (so, writes are lost if the whiteboard service is not available!).
+
+We add the `@EnableCircuitBreaker` annotation to the application class to enable the circuit breaker.
+
+Now we can start everything (config service, discovery service, whiteboard service, whiteboard client).
+
+Hystrix provides an interface to monitor what's happening with the circuit breaker.
+We can go to [http://localhost:8080/hystrix.stream](http://localhost:8080/hystrix.stream) and see that Hystrix is emitting information.
+
+### Using the Hystrix dashboard
+
+To make monitoring the circuit breaker more convenient, we'll use the Hystrix dashboard.
+
+We add another small Spring Boot application to the project, `hystrix-dashboard`.
+Like the other services, it's a very simple Spring Boot application.
+It has a dependency on `org.springframework.cloud:spring-cloud-starter-hystrix-dashboard` and the `@EnableHystrixDashboard` annotation on its application class.
+It's configured to run on port 8081 in its `application.properties`.
+
+We can now start the Hystrix dashboard and go to [http://localhost:8081/hystrix](http://localhost:8081/hystrix).
+We enter the URL of the Hystrix stream that we want to monitor: http://localhost:8080/hystrix.stream
+
+When we refresh the dashboard at http://localhost:8080 a few times we can see in the dashboard that the requests are being monitored by Hystrix.
+Everything is working and the circuit is closed.
+
+Now, we can see what happens if a failure occurs.
+Stop the whiteboard service, and refresh the whiteboard in the browser.
+You'll see that the fallback message appears.
+
+When you look at the Hystrix dashboard, you'll see that there was a failure, but the circuit is still closed.
+The circuit doesn't break after just one failure.
+In this demo, it's configured to open if more than 10 requests fail in a window of 3 seconds.
+
+If we go to the whiteboard client again and quickly hit refresh (F5) a number of times, we'll see in the Hystrix dasboard that eventually the circuit opens.
+When the circuit is open, Hystrix won't try to call the service for a period of time if a new request is made; it will immediately call the fallback.
+
+If you wait a while and do another request, it will try to call the service again.
+If the service is still unavailable, the circuit stays open and further requests will again immediately fail for a certain time period.
+If the service is available again, the circuit closes and things will return to normal.
+
+Now we start the whiteboard service again (and wait a while until it's fully started and has registered itself, and until the whiteboard client has refreshed its cache from Eureka).
+If you now refresh the whiteboard, the call to the service will succeed and the circuit will close.
+
+Enter `./goto step1` in a git bash shell to go back to step 1.
